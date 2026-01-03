@@ -76,8 +76,8 @@ This project focuses on managing projects, tasks, and team members within a soft
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/your-username/project-management-crud-system.git
-cd project-management-crud-system
+git clone https://github.com/Zeeshan-Khan1/Project-Management-Task-Tracking-System.git
+cd Project-Management-Task-Tracking-System
 ```
 ### Frontend Setup
 ```bash
