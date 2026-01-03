@@ -1,4 +1,4 @@
-# Project Management & Task Tracking System (CRUD-Based)
+# Project Management & Task Tracking System
 
 A full-stack **CRUD-based Project Management & Task Tracking System** built using **Node.js, Express, MongoDB, and Vite (Frontend)**.  
 This project focuses on managing projects, tasks, and team members within a software team **without authentication**, keeping the main emphasis on **CRUD operations and backend logic**.
