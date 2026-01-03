@@ -1,5 +1,5 @@
 import TeamMember from "../models/teamMember.model.js"
-import { uploadToCloudinary } from "../utils/cloudinary.js"
+import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js"
 
 // Create team member
 export const createTeamMember = async (req, res) => {
@@ -114,12 +114,34 @@ export const updateTeamMember = async (req, res) => {
         const { id } = req.params
         const { name, role } = req.body
 
+        // Get current team member to check for old image
+        const currentMember = await TeamMember.findById(id)
+        
+        if (!currentMember) {
+            return res.status(404).json({
+                success: false,
+                message: "Team member not found"
+            })
+        }
+
         let updateData = { name, role }
 
         // Upload new image to Cloudinary if file exists
         if (req.file) {
             try {
-                const imageUrl = await uploadToCloudinary(req.file)
+                // Delete old image from Cloudinary if it exists
+                if (currentMember.imageUrl) {
+                    try {
+                        await deleteFromCloudinary(currentMember.imageUrl)
+                        console.log('Old team member image deleted from Cloudinary')
+                    } catch (deleteError) {
+                        console.error('Error deleting old team member image:', deleteError)
+                        // Continue with upload even if delete fails
+                    }
+                }
+
+                // Upload new image to Cloudinary
+                const imageUrl = await uploadToCloudinary(req.file, 'team-members')
                 updateData.imageUrl = imageUrl
             } catch (uploadError) {
                 console.error("Cloudinary upload error:", uploadError)
@@ -136,13 +158,6 @@ export const updateTeamMember = async (req, res) => {
             updateData,
             { new: true, runValidators: true }
         )
-        
-        if (!teamMember) {
-            return res.status(404).json({
-                success: false,
-                message: "Team member not found"
-            })
-        }
 
         res.status(200).json({
             success: true,

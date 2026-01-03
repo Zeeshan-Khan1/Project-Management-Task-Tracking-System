@@ -1,6 +1,72 @@
 import User from "../models/user.model.js"
 import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js"
 
+// Create user
+export const createUser = async (req, res) => {
+    try {
+        const { email, password, role } = req.body
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and Password are required"
+            })
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email })
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: "User with this email already exists"
+            })
+        }
+
+        let profilePicture = ""
+        
+        // Upload profile picture to Cloudinary if file exists
+        if (req.file) {
+            try {
+                profilePicture = await uploadToCloudinary(req.file, 'users')
+            } catch (uploadError) {
+                console.error("Cloudinary upload error:", uploadError)
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to upload profile picture",
+                    error: uploadError.message
+                })
+            }
+        }
+
+        const userData = {
+            email,
+            password,
+            role: role || "User", // Default to "User" if not provided
+            profilePicture
+        }
+
+        const user = new User(userData)
+        await user.save()
+
+        // Return user without password
+        const userResponse = user.toObject()
+        delete userResponse.password
+
+        res.status(201).json({
+            success: true,
+            message: "User created successfully",
+            user: userResponse
+        })
+    } catch (error) {
+        console.error("Error creating user:", error)
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message
+        })
+    }
+}
+
 // Read all users
 export const readAllUsers = async (req, res) => {
     try {
@@ -53,7 +119,7 @@ export const readUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params
-        const { email, password } = req.body
+        const { email, password, role } = req.body
 
         // Get current user to check for old profile picture
         const currentUser = await User.findById(id)
@@ -73,6 +139,10 @@ export const updateUser = async (req, res) => {
         
         if (password) {
             updateData.password = password
+        }
+
+        if (role) {
+            updateData.role = role
         }
 
         // Handle profile picture upload

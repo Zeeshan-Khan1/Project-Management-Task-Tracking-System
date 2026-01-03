@@ -3,13 +3,16 @@ const router = express.Router()
 import upload from "../middleware/upload.js"
 
 import {
+    createUser,
     readAllUsers,
     readUserById,
     updateUser
 } from "../controllers/users.controllers.js"
 
-// Read all users
-router.route("/users").get(readAllUsers)
+// Create user and Read all users
+router.route("/users")
+    .post(upload.single('profilePicture'), createUser)
+    .get(readAllUsers)
 
 // Read single user by ID
 router.route("/users/:id").get(readUserById)
